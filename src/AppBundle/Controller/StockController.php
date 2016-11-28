@@ -91,6 +91,7 @@ class StockController extends Controller
                 'actualBalance' => $actualBalance,
                 'newBalance' => $newBalance,
                 'fee' => $fee,
+                'quantity' => (int)$quantity,
                 'stockOption' => $stockOption,
             ]
         );
@@ -102,7 +103,13 @@ class StockController extends Controller
      */
     public function buyAction(Request $request, User $user, StockOption $stockOption)
     {
-        list($quantity, $total, $fee, $actualBalance, $newBalance) = $this->parseBuy($request, $user, $stockOption);
+        list(
+            $quantity,
+            $total,
+            $fee,
+            $actualBalance,
+            $newBalance
+            ) = $this->parseBuy($request, $user, $stockOption);
 
         $validation = $this->validateBuy($stockOption, $quantity, $newBalance);
         if ($validation) {
@@ -152,6 +159,7 @@ class StockController extends Controller
      * @param Request $request
      * @param User $user
      * @param StockOption $stockOption
+     *
      * @return array
      */
     private function parseBuy(Request $request, User $user, StockOption $stockOption)
@@ -192,6 +200,7 @@ class StockController extends Controller
      * @param Request $request
      * @param User $user
      * @param StockOption $stockOption
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function preSellAction(Request $request, User $user, StockOption $stockOption)
@@ -210,7 +219,7 @@ class StockController extends Controller
         if (!$trade instanceof Trade) {
             return $this->json(
                 [
-                    'error' => 'Usuário não possui ações da empresa ' . $stockOption->getCompany()
+                    'error' => 'Usuário não possui ações da empresa '.$stockOption->getCompany(),
                 ]
             );
         }
@@ -250,6 +259,7 @@ class StockController extends Controller
      * @param Request $request
      * @param User $user
      * @param StockOption $stockOption
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function sellAction(Request $request, User $user, StockOption $stockOption)

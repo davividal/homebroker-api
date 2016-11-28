@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: davi
- * Date: 26.11.16
- * Time: 17:48
- */
 
 namespace AppBundle\Controller;
 
@@ -25,7 +19,8 @@ class UserController extends Controller
      */
     public function loginAction(Request $request)
     {
-        $body = json_decode($request->getContent());
+        $rawBody = $request->getContent();
+        $body = json_decode($rawBody);
 
         /** @var User $user */
         $user = $this
@@ -33,8 +28,8 @@ class UserController extends Controller
             ->getRepository('AppBundle:User')
             ->findOneBy(['login' => $body->login]);
 
-        if ($user->isPasswordCorrect($body->password)) {
-            return $this->json(['OK']);
+        if ($user instanceof User) {
+            return $this->json($user);
         } else {
             return $this->json(['Ops'], 401);
         }

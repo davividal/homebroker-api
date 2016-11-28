@@ -303,7 +303,8 @@ class User implements UserInterface, \Serializable, \JsonSerializable
             'id' => $this->id,
             'name' => $this->name,
             'login' => $this->login,
-            'balance' => $this->balance
+            'balance' => $this->balance,
+            'password' => $this->password
         ];
     }
 

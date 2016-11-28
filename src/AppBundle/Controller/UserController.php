@@ -23,7 +23,7 @@ class UserController extends Controller
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function login(Request $request)
+    public function loginAction(Request $request)
     {
         $body = json_decode($request->getContent());
 
@@ -38,5 +38,15 @@ class UserController extends Controller
         } else {
             return $this->json(['Ops'], 401);
         }
+    }
+
+    /**
+     * @Route("/balance/{user}")
+     * @param User $user
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function balanceAction(User $user)
+    {
+        return $this->json($user);
     }
 }

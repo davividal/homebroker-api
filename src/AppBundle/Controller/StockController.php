@@ -23,14 +23,41 @@ use Symfony\Component\HttpFoundation\Request;
 class StockController extends Controller
 {
     /**
+     * @Route("/stock-option/update-values")
+     * @Method({"POST"})
+     */
+    public function updateValuesAction()
+    {
+        /** @var StockOption[] $stockOptions */
+        $stockOptions = $this->getDoctrine()->getRepository('AppBundle:StockOption')->findAll();
+
+        foreach ($stockOptions as $stockOption) {
+            $newValue = rand(20, 40);
+            $stockOption->setValue((string)$newValue);
+
+            $this->getDoctrine()->getManager()->persist($stockOption);
+        }
+        $this->getDoctrine()->getManager()->flush();
+
+        return $this->json(['OK']);
+    }
+
+    /**
+     * @Route("/stock-option")
+     */
+    public function stockIndexAction()
+    {
+        $stockOptions = $this->getDoctrine()->getRepository('AppBundle:StockOption')->findAll();
+
+        return $this->json($stockOptions);
+    }
+
+    /**
      * @Route("/stock-option/{user}")
      */
     public function indexAction(Request $request, User $user)
     {
         $stockOptions = $user->getTrades()->toArray();
-//        dump($stockOptions); die;
-
-//        $stockOptions = $this->get('doctrine')->getRepository('AppBundle:Trade')->findAll();
 
         return $this->json($stockOptions);
     }
@@ -117,76 +144,6 @@ class StockController extends Controller
         }
 
         return $this->json(['OK']);
-    }
-
-    /**
-     * @Route("/dashboard/buy-stocks/teste", name="buy-stocks")
-     */
-    public function oldBuyAction(Request $request)
-    {
-        /** @var Trade $trade */
-        $trade = new Trade();
-
-        $form = $this->createFormBuilder($trade)
-            ->add(
-                'stockOption',
-                EntityType::class,
-                [
-                    'class' => 'AppBundle:StockOption',
-                    'label' => 'Empresa',
-                ]
-            )
-            ->add('quantity', IntegerType::class, ['label' => 'Quantidade'])
-            ->add('save', SubmitType::class, ['label' => 'Comprar'])
-            ->getForm();
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted()) {
-            if (!($trade->getQuantity() <= $trade->getStockOption()->getQuantity())) {
-                $form
-                    ->get('stockOption')
-                    ->addError(new FormError('Esta empresa não possui essa quantidade de ações disponíveis.'));
-            }
-
-            $transactionValue = $trade->getStockOption()->getValue() * $trade->getQuantity();
-            if (!($transactionValue <= $this->getUser()->getBalance())) {
-                $form
-                    ->get('quantity')
-                    ->addError(new FormError('Seu saldo é insuficiente para executar esta transação.'));
-            }
-
-            if ($form->isValid()) {
-
-                $trade = $form->getData();
-                $trade->setUser($this->getUser());
-
-                $trade->setPaid($trade->getStockOption()->getValue());
-
-
-                $newBalance = $this->getUser()->getBalance() - $transactionValue;
-
-                $this->getUser()->setBalance($newBalance);
-
-                $newQuantity = $trade->getStockOption()->getQuantity() - $trade->getQuantity();
-                $trade->getStockOption()->setQuantity($newQuantity);
-
-                // ... perform some action, such as saving the task to the database
-                // for example, if Task is a Doctrine entity, save it!
-                $em = $this->getDoctrine()->getManager();
-                $em->persist($trade);
-                $em->flush();
-
-                return $this->redirectToRoute('user-dashboard');
-            }
-        }
-
-        return $this->render(
-            'home-broker/buy-stocks.html.twig',
-            [
-                'form' => $form->createView(),
-            ]
-        );
     }
 
     /**

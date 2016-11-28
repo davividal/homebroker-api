@@ -57,7 +57,14 @@ class StockController extends Controller
      */
     public function indexAction(Request $request, User $user)
     {
-        $stockOptions = $user->getTrades()->toArray();
+        $stockOptions = $user
+            ->getTrades()
+            ->filter(
+                function (Trade $trade) {
+                    return $trade->getQuantity() > 0;
+                }
+            )
+            ->toArray();
 
         return $this->json($stockOptions);
     }
@@ -114,7 +121,7 @@ class StockController extends Controller
                 ->findOneBy(
                     [
                         'user' => $user,
-                        'stock_option' => $stockOption
+                        'stock_option' => $stockOption,
                     ]
                 );
 
@@ -137,7 +144,7 @@ class StockController extends Controller
         } catch (\Exception $e) {
             return $this->json(
                 [
-                    'error' => 'Ocorreu um erro ao processar sua transação: ' . $e->getMessage()
+                    'error' => 'Ocorreu um erro ao processar sua transação: '.$e->getMessage(),
                 ],
                 400
             );
@@ -168,7 +175,7 @@ class StockController extends Controller
         if ($stockOption->getQuantity() < $quantity) {
             return $this->json(
                 [
-                    'error' => 'Quantidade de ações não disponível.'
+                    'error' => 'Quantidade de ações não disponível.',
                 ],
                 422
             );
@@ -177,7 +184,119 @@ class StockController extends Controller
         if ($newBalance < 0) {
             return $this->json(
                 [
-                    'error' => 'Saldo insuficiente.'
+                    'error' => 'Saldo insuficiente.',
+                ],
+                422
+            );
+        }
+    }
+
+    /**
+     * @Route("/stock-option/{user}/{stockOption}/sell")
+     * @Method({"GET"})
+     * @param Request $request
+     * @param User $user
+     * @param StockOption $stockOption
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function preSellAction(Request $request, User $user, StockOption $stockOption)
+    {
+        /** @var Trade $trade */
+        $trade = $this
+            ->getDoctrine()
+            ->getRepository('AppBundle:Trade')
+            ->findOneBy(
+                [
+                    'user' => $user,
+                    'stock_option' => $stockOption,
+                ]
+            );
+
+        $fee = 1.5;
+        $tax = '15%';
+        $actualBalance = $user->getBalance();
+        $newBalance = $user->getBalance();
+
+        if ($request->get('quantity')) {
+            $subTotal = $request->get('quantity') * $stockOption->getValue();
+            $total = $subTotal - $fee - ($subTotal * 0.15);
+
+            $newBalance = (float)$user->getBalance() + $total;
+        }
+
+        return $this->json(
+            [
+                'trade' => $trade,
+                'fee' => $fee,
+                'tax' => $tax,
+                'actualBalance' => $actualBalance,
+                'newBalance' => $newBalance,
+            ]
+        );
+    }
+
+    /**
+     * @Route("/stock-option/{user}/{stockOption}/sell")
+     * @Method({"POST"})
+     * @param Request $request
+     * @param User $user
+     * @param StockOption $stockOption
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function sellAction(Request $request, User $user, StockOption $stockOption)
+    {
+        /** @var Trade $trade */
+        $trade = $this
+            ->getDoctrine()
+            ->getRepository('AppBundle:Trade')
+            ->findOneBy(
+                [
+                    'user' => $user,
+                    'stock_option' => $stockOption,
+                ]
+            );
+
+        $quantity = $request->get('quantity');
+        $validation = $this->validateSell($trade, $quantity);
+        if ($validation) {
+            return $validation;
+        }
+
+        $fee = 1.5;
+
+        $subTotal = $quantity * $stockOption->getValue();
+        $total = $subTotal - $fee - ($subTotal * 0.15);
+
+        $newBalance = (float)$user->getBalance() + $total;
+
+        try {
+            $trade->setQuantity($trade->getQuantity() - $quantity);
+            $stockOption->setQuantity($stockOption->getQuantity() + $quantity);
+            $user->setBalance($newBalance);
+
+            $this->getDoctrine()->getManager()->persist($trade);
+            $this->getDoctrine()->getManager()->persist($user);
+            $this->getDoctrine()->getManager()->persist($stockOption);
+
+            $this->getDoctrine()->getManager()->flush();
+        } catch (\Exception $e) {
+            return $this->json(
+                [
+                    'error' => 'Ocorreu um erro ao processar sua transação: '.$e->getMessage(),
+                ],
+                400
+            );
+        }
+
+        return $this->json(['OK']);
+    }
+
+    private function validateSell(Trade $trade, $quantity)
+    {
+        if ($trade->getQuantity() < $quantity) {
+            return $this->json(
+                [
+                    'error' => 'Quantidade de ações não disponível.',
                 ],
                 422
             );

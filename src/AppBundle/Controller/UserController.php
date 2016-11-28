@@ -8,25 +8,35 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
 
 class UserController extends Controller
 {
     /**
-     * @Route("/dashboard/", name="user-dashboard")
+     * @Route("/login")
+     * @Method({"POST"})
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function dashboardAction()
+    public function login(Request $request)
     {
-        $user = $this->getUser();
+        $body = json_decode($request->getContent());
 
-        return $this->render(
-            'home-broker/dashboard.html.twig',
-            [
-                'user' => $user,
-                'stocks' => $user->getTrades()
-            ]
-        );
+        /** @var User $user */
+        $user = $this
+            ->getDoctrine()
+            ->getRepository('AppBundle:User')
+            ->findOneBy(['login' => $body->login]);
+
+        if ($user->isPasswordCorrect($body->password)) {
+            return $this->json(['OK']);
+        } else {
+            return $this->json(['Ops'], 401);
+        }
     }
 }

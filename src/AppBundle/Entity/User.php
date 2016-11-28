@@ -7,7 +7,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * User
  */
-class User implements UserInterface, \Serializable
+class User implements UserInterface, \Serializable, \JsonSerializable
 {
     /**
      * @var integer
@@ -143,7 +143,7 @@ class User implements UserInterface, \Serializable
 
     public function encryptPassword($password)
     {
-        $this->setPassword(crypt($password, ''));
+        return sha1($password, '');
     }
 
     /**
@@ -288,5 +288,27 @@ class User implements UserInterface, \Serializable
     public function getTrades()
     {
         return $this->trades;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'login' => $this->login,
+            'balance' => $this->balance
+        ];
+    }
+
+    public function isPasswordCorrect($password)
+    {
+        return $this->password === $this->encryptPassword($password);
     }
 }

@@ -13,7 +13,7 @@ class LoadUserData implements FixtureInterface
         $davi = new User();
         $davi->setName('Davi Vidal');
         $davi->setLogin('davi');
-        $davi->encryptPassword('teste');
+        $davi->setPassword($davi->encryptPassword('teste'));
         $davi->setBalance('100.00');
 
         $manager->persist($davi);
@@ -21,7 +21,7 @@ class LoadUserData implements FixtureInterface
         $marcelo = new User();
         $marcelo->setName('Marcelo Ribeiro');
         $marcelo->setLogin('marcelo');
-        $marcelo->encryptPassword('teste');
+        $marcelo->setPassword($marcelo->encryptPassword('teste'));
         $marcelo->setBalance('100.00');
 
         $manager->persist($marcelo);
@@ -29,7 +29,7 @@ class LoadUserData implements FixtureInterface
         $vinicius = new User();
         $vinicius->setName('Vinicius Trainotti');
         $vinicius->setLogin('vinicius');
-        $vinicius->encryptPassword('teste');
+        $vinicius->setPassword($vinicius->encryptPassword('teste'));
         $vinicius->setBalance('100.00');
 
         $manager->persist($vinicius);

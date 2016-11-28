@@ -10,6 +10,7 @@
         <tr>
             <th>Ação</th>
             <th>Quantidade</th>
+            <th>Valor pago</th>
             <th>&nbsp;</th>
         </tr>
         </thead>
@@ -19,6 +20,7 @@
             <tr>
                 <td>{{ stock }}</td>
                 <td>{{ stock.getQuantity }}</td>
+                <td>{{ stock.getPaid }}</td>
                 <td><button>Vender</button></td>
             </tr>
         {% endfor %}

@@ -5,7 +5,7 @@ namespace AppBundle\Entity;
 /**
  * StockOption
  */
-class StockOption
+class StockOption implements \JsonSerializable
 {
     /**
      * @var integer
@@ -188,5 +188,23 @@ class StockOption
     public function getTrades()
     {
         return $this->trades;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->id,
+            'company' => $this->company,
+            'ticker_symbol' => $this->ticker_symbol,
+            'quantity' => $this->quantity,
+            'value' => $this->value
+        ];
     }
 }

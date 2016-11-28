@@ -12,10 +12,6 @@ AppBundle\Entity\Trade:
             type: integer
         quantity:
             type: integer
-        paid:
-            type: decimal
-            precision: 10
-            scale: 2
     manyToOne:
         user:
             targetEntity: User

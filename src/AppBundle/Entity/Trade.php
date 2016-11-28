@@ -5,7 +5,7 @@ namespace AppBundle\Entity;
 /**
  * Trade
  */
-class Trade
+class Trade implements \JsonSerializable
 {
     /**
      * @var integer
@@ -26,11 +26,6 @@ class Trade
      * @var integer
      */
     private $quantity;
-
-    /**
-     * @var string
-     */
-    private $paid;
 
     /**
      * @var \AppBundle\Entity\User
@@ -126,30 +121,6 @@ class Trade
     }
 
     /**
-     * Set paid
-     *
-     * @param string $paid
-     *
-     * @return Trade
-     */
-    public function setPaid($paid)
-    {
-        $this->paid = $paid;
-
-        return $this;
-    }
-
-    /**
-     * Get paid
-     *
-     * @return string
-     */
-    public function getPaid()
-    {
-        return $this->paid;
-    }
-
-    /**
      * Set user
      *
      * @param \AppBundle\Entity\User $user
@@ -200,5 +171,22 @@ class Trade
     public function __toString()
     {
         return $this->getStockOption()->getTickerSymbol();
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->id,
+            'stock_option' => $this->stock_option,
+            'user' => $this->user,
+            'quantity' => $this->quantity
+        ];
     }
 }

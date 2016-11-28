@@ -59,11 +59,6 @@ class StockController extends Controller
     {
         $stockOptions = $user
             ->getTrades()
-            ->filter(
-                function (Trade $trade) {
-                    return $trade->getQuantity() > 0;
-                }
-            )
             ->toArray();
 
         return $this->json($stockOptions);
@@ -212,13 +207,27 @@ class StockController extends Controller
                 ]
             );
 
+        if (!$trade instanceof Trade) {
+            return $this->json(
+                [
+                    'error' => 'Usuário não possui ações da empresa ' . $stockOption->getCompany()
+                ]
+            );
+        }
+
         $fee = 1.5;
         $tax = '15%';
         $actualBalance = $user->getBalance();
         $newBalance = $user->getBalance();
 
         if ($request->get('quantity')) {
-            $subTotal = $request->get('quantity') * $stockOption->getValue();
+            $quantity = $request->get('quantity');
+            $validation = $this->validateSell($trade, $quantity);
+            if ($validation) {
+                return $validation;
+            }
+
+            $subTotal = $quantity * $stockOption->getValue();
             $total = $subTotal - $fee - ($subTotal * 0.15);
 
             $newBalance = (float)$user->getBalance() + $total;
@@ -277,6 +286,10 @@ class StockController extends Controller
             $this->getDoctrine()->getManager()->persist($trade);
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->persist($stockOption);
+
+            if (0 === $trade->getQuantity()) {
+                $this->getDoctrine()->getManager()->remove($trade);
+            }
 
             $this->getDoctrine()->getManager()->flush();
         } catch (\Exception $e) {
